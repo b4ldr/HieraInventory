@@ -50,7 +50,7 @@ class HieraInventory(object):
                     file_path = os.path.join(group_path, node)
                     if os.path.isfile(file_path) and node.endswith(".yaml"):
                         fqdn = node.rstrip(".yaml")
-                        inventory.group.hosts.append(fqdn)
+                        inventory[group].hosts.append(fqdn)
         return inventory
 
     def parse_args(self):
