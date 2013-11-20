@@ -44,11 +44,12 @@ class HieraInventory(object):
             group_path = os.path.join(data_dir, group)
             if os.path.isdir(group_path):
                 if group not in inventory:
-                    inventory[group] = []
+                    inventory[group] = { "hosts": [], "vars": dict() }
                 for node in os.listdir(group_path):
                     file_path = os.path.join(group_path, node)
                     if os.path.isfile(file_path) and node.endswith(".yaml"):
-                        inventory[group].append(node.rstrip(".yaml"))
+                        fqdn = node.rstrip(".yaml")
+                        inventory.group.hosts.append(fqdn)
         return inventory
 
     def parse_args(self):
