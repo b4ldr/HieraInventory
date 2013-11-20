@@ -17,6 +17,7 @@ info about all of your managed instances.
 # https://raw.github.com/ansible/ansible/devel/plugins/inventory/cobbler.py for reference
 
 import os
+import argparse 
 try:
     import json
 except ImportError:
