@@ -1,0 +1,62 @@
+#!/usr/bin/python
+
+"""
+Hiera external inventory script
+=================================
+
+Ansible has a feature where instead of reading from /etc/ansible/hosts
+as a text file, it can query external programs to obtain the list
+of hosts, groups the hosts are in, and even variables to assign to each host.
+
+To use this, copy this file over /etc/ansible/hosts and chmod +x the file.
+This, more or less, allows you to keep one central database containing
+info about all of your managed instances.
+
+"""
+# thanks to the cobbler importer[1] for reference
+# https://raw.github.com/ansible/ansible/devel/plugins/inventory/cobbler.py for reference
+
+import os
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
+HIERADATA="/etc/hierdata/"
+COMMON_VARS="common.yaml"
+class HieraInventory(object):
+
+    def __init__(self):
+        """ Main Execution """
+
+        data_dir = HIERADATA
+        self.args = self.parse_args()
+        self.inventory = self.get_inventory(data_dir)  # A list of groups and the hosts in that group
+        self.cache = dict()  # Details about hosts in the inventory
+        if self.args.host:
+            print json.dumps({}, sort_keys=True, indent=2)
+        elif self.args.list:
+            print json.dumps(self.inventory, sort_keys=True, indent=2)
+
+    def get_inventory(self, data_dir):
+        inventory = dict()
+        for group in os.listdir(data_dir):
+            group_path = os.path.join(data_dir, group)
+            if os.path.isdir(group_path):
+                if group not in inventory:
+                    inventory[group] = []
+                for node in os.listdir(group_path):
+                    file_path = os.path.join(group_path, node)
+                    if os.path.isfile(file_path) and node.endswith(".yaml"):
+                        inventory[group].append(node.rstrip(".yaml"))
+        return inventory
+
+    def parse_args(self):
+        """ Command line argument processing """
+
+        parser = argparse.ArgumentParser(description='Produce an Ansible Inventory file based on Cobbler')
+        parser.add_argument('--list', action='store_true', default=True, help='List instances (default: True)')
+        parser.add_argument('--host', action='store_true', help='Get all the variables about a specific instance')
+        return parser.parse_args()
+
+HieraInventory()
