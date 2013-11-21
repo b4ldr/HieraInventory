@@ -17,7 +17,9 @@ info about all of your managed instances.
 # https://raw.github.com/ansible/ansible/devel/plugins/inventory/cobbler.py for reference
 
 import os
+import yaml
 import argparse 
+import datetime
 try:
     import json
 except ImportError:
@@ -25,6 +27,14 @@ except ImportError:
 
 HIERADATA="/etc/hierdata/"
 COMMON_VARS="common.yaml"
+class DatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return list(obj.timetuple())[0:6]
+        if isinstance(obj, datetime.date):
+            return list(obj.timetuple())[0:3]
+        return json.JSONEncoder.default(self, obj)
+
 class HieraInventory(object):
 
     def __init__(self):
@@ -52,7 +62,10 @@ class HieraInventory(object):
                     if os.path.isfile(file_path) and node.endswith('.yaml'):
                         fqdn = node.rstrip('.yaml')
                         inventory[group]['hosts'].append(fqdn)
-                        inventory['_meta']['hostvars'][fqdn] = { 'fqdn': fqdn}
+                        host_yaml = yaml.load(open(file_path, 'r'))
+                        print host_yaml
+                        host_json = json.dumps(host_yaml, cls=DatetimeEncoder)
+                        #inventory['_meta']['hostvars'][fqdn] = yaml.dump(host_json)
 
         return inventory
 
